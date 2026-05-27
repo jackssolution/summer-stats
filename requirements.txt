@@ -1,0 +1,6 @@
+flask>=3.0
+streamlit>=1.37
+requests>=2.32
+beautifulsoup4>=4.12
+selenium>=4.20
+pandas>=2.0

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Summer Ball Tracker 2026</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-title">
+      <span class="ball-icon">⚾</span>
+      <div>
+        <h1>Summer Ball Tracker</h1>
+        <p class="subtitle">2026 Season · Northwoods League</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="last-updated" id="lastUpdated">
+        {% if last_scrape %}Last scraped: {{ last_scrape }}{% else %}No auto-scrape yet{% endif %}
+      </span>
+      <button class="btn btn-scrape" onclick="triggerScrape()" id="scrapeBtn">
+        ↻ Refresh Stats
+      </button>
+      <button class="btn btn-add" onclick="openAddModal()">
+        + Add Game
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ── Filter bar ──────────────────────────────────────────────────────────── -->
+<nav class="filter-bar">
+  <button class="filter-btn active" onclick="filterTeam('all', this)">All Players</button>
+  <button class="filter-btn" onclick="filterTeam('Kenosha Kingfish', this)">Kenosha</button>
+  <button class="filter-btn" onclick="filterTeam('St. Cloud Rox', this)">St. Cloud</button>
+  <button class="filter-btn" onclick="filterTeam('Willmar Stingers', this)">Willmar</button>
+  <div class="filter-divider"></div>
+  <button class="filter-btn" onclick="filterPos('all', this)" id="posAll">All Positions</button>
+  <button class="filter-btn" onclick="filterPos('pitcher', this)">Pitchers</button>
+  <button class="filter-btn" onclick="filterPos('hitter', this)">Hitters</button>
+</nav>
+
+<!-- ── Main content ────────────────────────────────────────────────────────── -->
+<main class="main-content">
+  {% set teams_order = ['Kenosha Kingfish', 'St. Cloud Rox', 'Willmar Stingers'] %}
+  {% set pitchers = players | selectattr('position', 'in', ['pitcher', 'two-way']) | list %}
+  {% set hitters  = players | selectattr('position', 'in', ['hitter',  'two-way']) | list %}
+
+  <!-- ── PITCHERS section ───────────────────────────────────────────────── -->
+  {% if pitchers %}
+  <section class="position-section" id="section-pitchers">
+    <h2 class="section-heading">PITCHERS</h2>
+    {% for p in pitchers %}
+    {% set pt = p.pitching_totals %}
+    <div class="player-card" data-team="{{ p.team }}" data-pos="pitcher">
+
+      <!-- Card header -->
+      <div class="card-header">
+        <div class="player-meta">
+          <span class="player-name">{{ p.name }}</span>
+          <span class="player-team-tag">{{ p.team }}</span>
+          <span class="player-badge {% if p.throws == 'L' %}badge-left{% else %}badge-right{% endif %}">
+            {{ p.throws }}HP
+          </span>
+          {% if p.position == 'two-way' %}
+          <span class="player-badge badge-twoway">TWO-WAY</span>
+          {% endif %}
+        </div>
+        <button class="btn-add-line" onclick="openPitchingModal({{ p.id }}, '{{ p.name | replace("'", "\\'") }}')">+ Game</button>
+      </div>
+
+      <!-- Season summary -->
+      <div class="stat-summary">
+        {% if pt and pt.G > 0 %}
+        <div class="stat-pill">
+          <span class="pill-label">G</span>
+          <span class="pill-val">{{ pt.G }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">IP</span>
+          <span class="pill-val">{{ pt.IP }}</span>
+        </div>
+        <div class="stat-pill highlight-green">
+          <span class="pill-label">K</span>
+          <span class="pill-val">{{ pt.K }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">BB</span>
+          <span class="pill-val">{{ pt.BB }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">H</span>
+          <span class="pill-val">{{ pt.H_allowed }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">HR</span>
+          <span class="pill-val">{{ pt.HR_allowed }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">R</span>
+          <span class="pill-val">{{ pt.R }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">ER</span>
+          <span class="pill-val">{{ pt.ER }}</span>
+        </div>
+        <div class="stat-pill highlight-blue">
+          <span class="pill-label">ERA</span>
+          <span class="pill-val">{{ "%.2f"|format(pt.ERA) }}</span>
+        </div>
+        <div class="stat-pill highlight-blue">
+          <span class="pill-label">K%</span>
+          <span class="pill-val">{{ pt.K_pct }}%</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">BB%</span>
+          <span class="pill-val">{{ pt.BB_pct }}%</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">K/9</span>
+          <span class="pill-val">{{ pt.K_per9 }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">Str%</span>
+          <span class="pill-val">{{ pt.strike_pct }}%</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">Pitches</span>
+          <span class="pill-val">{{ pt.total_pitches }}</span>
+        </div>
+        {% else %}
+        <span class="no-data">No games logged yet</span>
+        {% endif %}
+      </div>
+
+      <!-- Game log table -->
+      {% if p.pitching %}
+      <div class="table-wrap">
+        <table class="game-log">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Opp</th>
+              <th>H/A</th>
+              <th>IP</th>
+              <th>BF</th>
+              <th>K</th>
+              <th>BB</th>
+              <th>HBP</th>
+              <th>R</th>
+              <th>ER</th>
+              <th>H</th>
+              <th>2B</th>
+              <th>3B</th>
+              <th>HR</th>
+              <th>Str</th>
+              <th>Ball</th>
+              <th>Pit</th>
+              <th>Str%</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for g in p.pitching | sort(attribute='game_date', reverse=True) %}
+            <tr>
+              <td class="date-col">{{ g.game_date }}</td>
+              <td>{{ g.opponent or '—' }}</td>
+              <td><span class="ha-badge {% if g.home_away == 'H' %}ha-home{% else %}ha-away{% endif %}">{{ g.home_away }}</span></td>
+              <td class="ip-col">{{ g.IP }}</td>
+              <td>{{ g.BF }}</td>
+              <td class="k-col">{{ g.K }}</td>
+              <td>{{ g.BB }}</td>
+              <td>{{ g.HBP }}</td>
+              <td>{{ g.R }}</td>
+              <td>{{ g.ER }}</td>
+              <td>{{ g.H_allowed }}</td>
+              <td>{{ g.doubles_allowed }}</td>
+              <td>{{ g.triples_allowed }}</td>
+              <td>{{ g.HR_allowed }}</td>
+              <td>{{ g.strikes }}</td>
+              <td>{{ g.balls }}</td>
+              <td class="bold-col">{{ g.total_pitches }}</td>
+              <td>{% if g.total_pitches > 0 %}{{ (g.strikes / g.total_pitches * 100) | round(1) }}%{% else %}—{% endif %}</td>
+              <td><button class="btn-del" onclick="deleteLine('pitching', {{ g.id }})">✕</button></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <!-- Two-way: also show batting -->
+      {% if p.position == 'two-way' and p.batting %}
+      <div class="twoway-batting">
+        <h4 class="twoway-label">Batting</h4>
+        {% set bt = p.batting_totals %}
+        <div class="stat-summary">
+          <div class="stat-pill highlight-blue">
+            <span class="pill-label">AVG</span>
+            <span class="pill-val">{{ "%.3f"|format(bt.AVG) }}</span>
+          </div>
+          <div class="stat-pill highlight-blue">
+            <span class="pill-label">OBP</span>
+            <span class="pill-val">{{ "%.3f"|format(bt.OBP) }}</span>
+          </div>
+          <div class="stat-pill highlight-blue">
+            <span class="pill-label">SLG</span>
+            <span class="pill-val">{{ "%.3f"|format(bt.SLG) }}</span>
+          </div>
+          <div class="stat-pill">
+            <span class="pill-label">AB</span>
+            <span class="pill-val">{{ bt.AB }}</span>
+          </div>
+          <div class="stat-pill">
+            <span class="pill-label">H</span>
+            <span class="pill-val">{{ bt.H }}</span>
+          </div>
+          <div class="stat-pill">
+            <span class="pill-label">2B</span>
+            <span class="pill-val">{{ bt.doubles }}</span>
+          </div>
+          <div class="stat-pill">
+            <span class="pill-label">3B</span>
+            <span class="pill-val">{{ bt.triples }}</span>
+          </div>
+          <div class="stat-pill highlight-green">
+            <span class="pill-label">HR</span>
+            <span class="pill-val">{{ bt.HR }}</span>
+          </div>
+          <div class="stat-pill">
+            <span class="pill-label">BB</span>
+            <span class="pill-val">{{ bt.BB }}</span>
+          </div>
+          <div class="stat-pill">
+            <span class="pill-label">HBP</span>
+            <span class="pill-val">{{ bt.HBP }}</span>
+          </div>
+          <div class="stat-pill">
+            <span class="pill-label">PA</span>
+            <span class="pill-val">{{ bt.PA }}</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="game-log">
+            <thead>
+              <tr>
+                <th>Date</th><th>Opp</th><th>H/A</th>
+                <th>AB</th><th>H</th><th>2B</th><th>3B</th><th>HR</th>
+                <th>BB</th><th>HBP</th><th>PA</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for g in p.batting | sort(attribute='game_date', reverse=True) %}
+              <tr>
+                <td class="date-col">{{ g.game_date }}</td>
+                <td>{{ g.opponent or '—' }}</td>
+                <td><span class="ha-badge {% if g.home_away == 'H' %}ha-home{% else %}ha-away{% endif %}">{{ g.home_away }}</span></td>
+                <td>{{ g.AB }}</td>
+                <td>{{ g.H }}</td>
+                <td>{{ g.doubles }}</td>
+                <td>{{ g.triples }}</td>
+                <td class="{% if g.HR > 0 %}k-col{% endif %}">{{ g.HR }}</td>
+                <td>{{ g.BB }}</td>
+                <td>{{ g.HBP }}</td>
+                <td>{{ g.PA }}</td>
+                <td><button class="btn-del" onclick="deleteLine('batting', {{ g.id }})">✕</button></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <button class="btn-add-line small" onclick="openBattingModal({{ p.id }}, '{{ p.name | replace("'", "\\'") }}')">+ Batting Game</button>
+      </div>
+      {% elif p.position == 'two-way' and not p.batting %}
+      <div class="twoway-batting">
+        <button class="btn-add-line small" onclick="openBattingModal({{ p.id }}, '{{ p.name | replace("'", "\\'") }}')">+ Batting Game</button>
+      </div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <!-- ── HITTERS section ────────────────────────────────────────────────── -->
+  {% if hitters %}
+  <section class="position-section" id="section-hitters">
+    <h2 class="section-heading">HITTERS</h2>
+    {% for p in hitters if p.position == 'hitter' %}
+    {% set bt = p.batting_totals %}
+    <div class="player-card" data-team="{{ p.team }}" data-pos="hitter">
+
+      <!-- Card header -->
+      <div class="card-header">
+        <div class="player-meta">
+          <span class="player-name">{{ p.name }}</span>
+          <span class="player-team-tag">{{ p.team }}</span>
+          <span class="player-badge badge-hitter">{{ p.bats }}HH</span>
+        </div>
+        <button class="btn-add-line" onclick="openBattingModal({{ p.id }}, '{{ p.name | replace("'", "\\'") }}')">+ Game</button>
+      </div>
+
+      <!-- Season summary -->
+      <div class="stat-summary">
+        {% if bt and bt.G > 0 %}
+        <div class="stat-pill highlight-blue">
+          <span class="pill-label">AVG</span>
+          <span class="pill-val">{{ "%.3f"|format(bt.AVG) }}</span>
+        </div>
+        <div class="stat-pill highlight-blue">
+          <span class="pill-label">OBP</span>
+          <span class="pill-val">{{ "%.3f"|format(bt.OBP) }}</span>
+        </div>
+        <div class="stat-pill highlight-blue">
+          <span class="pill-label">SLG</span>
+          <span class="pill-val">{{ "%.3f"|format(bt.SLG) }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">OPS</span>
+          <span class="pill-val">{{ "%.3f"|format(bt.OPS) }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">G</span>
+          <span class="pill-val">{{ bt.G }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">AB</span>
+          <span class="pill-val">{{ bt.AB }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">H</span>
+          <span class="pill-val">{{ bt.H }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">2B</span>
+          <span class="pill-val">{{ bt.doubles }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">3B</span>
+          <span class="pill-val">{{ bt.triples }}</span>
+        </div>
+        <div class="stat-pill highlight-green">
+          <span class="pill-label">HR</span>
+          <span class="pill-val">{{ bt.HR }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">BB</span>
+          <span class="pill-val">{{ bt.BB }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">HBP</span>
+          <span class="pill-val">{{ bt.HBP }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">PA</span>
+          <span class="pill-val">{{ bt.PA }}</span>
+        </div>
+        {% else %}
+        <span class="no-data">No games logged yet</span>
+        {% endif %}
+      </div>
+
+      <!-- Game log -->
+      {% if p.batting %}
+      <div class="table-wrap">
+        <table class="game-log">
+          <thead>
+            <tr>
+              <th>Date</th><th>Opp</th><th>H/A</th>
+              <th>AB</th><th>H</th><th>2B</th><th>3B</th><th>HR</th>
+              <th>BB</th><th>HBP</th><th>PA</th>
+              <th>AVG</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set running_h = namespace(val=0) %}
+            {% set running_ab = namespace(val=0) %}
+            {% for g in p.batting | sort(attribute='game_date', reverse=True) %}
+            {% set running_h.val = running_h.val + g.H %}
+            {% set running_ab.val = running_ab.val + g.AB %}
+            <tr>
+              <td class="date-col">{{ g.game_date }}</td>
+              <td>{{ g.opponent or '—' }}</td>
+              <td><span class="ha-badge {% if g.home_away == 'H' %}ha-home{% else %}ha-away{% endif %}">{{ g.home_away }}</span></td>
+              <td>{{ g.AB }}</td>
+              <td class="{% if g.H >= 2 %}highlight-cell{% elif g.H == 0 and g.AB > 0 %}dim-cell{% endif %}">{{ g.H }}</td>
+              <td>{{ g.doubles }}</td>
+              <td>{{ g.triples }}</td>
+              <td class="{% if g.HR > 0 %}k-col{% endif %}">{{ g.HR }}</td>
+              <td>{{ g.BB }}</td>
+              <td>{{ g.HBP }}</td>
+              <td>{{ g.PA }}</td>
+              <td class="avg-col">{% if g.AB > 0 %}{{ "%.3f"|format(g.H / g.AB) }}{% else %}—{% endif %}</td>
+              <td><button class="btn-del" onclick="deleteLine('batting', {{ g.id }})">✕</button></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+</main>
+
+
+<!-- ── Add Game Modal ──────────────────────────────────────────────────────── -->
+<div id="modalOverlay" class="modal-overlay hidden" onclick="closeModals(event)">
+
+  <!-- Batting modal -->
+  <div id="battingModal" class="modal hidden">
+    <div class="modal-header">
+      <h3>Add Batting Game — <span id="bModalName"></span></h3>
+      <button class="modal-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <form id="battingForm" onsubmit="submitBatting(event)">
+      <input type="hidden" id="bPlayerId" name="player_id" />
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="bDate" name="game_date" required />
+        </div>
+        <div class="form-group">
+          <label>Opponent</label>
+          <input type="text" id="bOpp" name="opponent" placeholder="vs. Rochester" />
+        </div>
+        <div class="form-group">
+          <label>H/A</label>
+          <select name="home_away" id="bHA">
+            <option value="H">Home</option>
+            <option value="A">Away</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid stat-inputs">
+        <div class="form-group"><label>AB</label><input type="number" name="AB" min="0" value="0" required /></div>
+        <div class="form-group"><label>PA</label><input type="number" name="PA" min="0" value="0" /></div>
+        <div class="form-group"><label>H</label><input type="number" name="H" min="0" value="0" /></div>
+        <div class="form-group"><label>2B</label><input type="number" name="doubles" min="0" value="0" /></div>
+        <div class="form-group"><label>3B</label><input type="number" name="triples" min="0" value="0" /></div>
+        <div class="form-group"><label>HR</label><input type="number" name="HR" min="0" value="0" /></div>
+        <div class="form-group"><label>BB</label><input type="number" name="BB" min="0" value="0" /></div>
+        <div class="form-group"><label>HBP</label><input type="number" name="HBP" min="0" value="0" /></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancel" onclick="closeAllModals()">Cancel</button>
+        <button type="submit" class="btn btn-save">Save Game</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Pitching modal -->
+  <div id="pitchingModal" class="modal hidden">
+    <div class="modal-header">
+      <h3>Add Pitching Game — <span id="pModalName"></span></h3>
+      <button class="modal-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <form id="pitchingForm" onsubmit="submitPitching(event)">
+      <input type="hidden" id="pPlayerId" name="player_id" />
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="pDate" name="game_date" required />
+        </div>
+        <div class="form-group">
+          <label>Opponent</label>
+          <input type="text" name="opponent" placeholder="vs. Rochester" />
+        </div>
+        <div class="form-group">
+          <label>H/A</label>
+          <select name="home_away">
+            <option value="H">Home</option>
+            <option value="A">Away</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid stat-inputs">
+        <div class="form-group"><label>IP</label><input type="text" name="IP" placeholder="3.2" value="0.0" required /></div>
+        <div class="form-group"><label>BF</label><input type="number" name="BF" min="0" value="0" /></div>
+        <div class="form-group"><label>K</label><input type="number" name="K" min="0" value="0" /></div>
+        <div class="form-group"><label>BB</label><input type="number" name="BB" min="0" value="0" /></div>
+        <div class="form-group"><label>HBP</label><input type="number" name="HBP" min="0" value="0" /></div>
+        <div class="form-group"><label>Strikes</label><input type="number" name="strikes" min="0" value="0" /></div>
+        <div class="form-group"><label>Balls</label><input type="number" name="balls" min="0" value="0" /></div>
+        <div class="form-group"><label>Pitches</label><input type="number" name="total_pitches" min="0" value="0" /></div>
+        <div class="form-group"><label>R</label><input type="number" name="R" min="0" value="0" /></div>
+        <div class="form-group"><label>ER</label><input type="number" name="ER" min="0" value="0" /></div>
+        <div class="form-group"><label>H Allow</label><input type="number" name="H_allowed" min="0" value="0" /></div>
+        <div class="form-group"><label>HR Allow</label><input type="number" name="HR_allowed" min="0" value="0" /></div>
+        <div class="form-group"><label>2B Allow</label><input type="number" name="doubles_allowed" min="0" value="0" /></div>
+        <div class="form-group"><label>3B Allow</label><input type="number" name="triples_allowed" min="0" value="0" /></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancel" onclick="closeAllModals()">Cancel</button>
+        <button type="submit" class="btn btn-save">Save Game</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Choose type modal (for "Add Game" button in header) -->
+  <div id="chooseModal" class="modal hidden">
+    <div class="modal-header">
+      <h3>Add Game — Select Player</h3>
+      <button class="modal-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <div id="playerPickList" class="player-pick-list"></div>
+  </div>
+
+</div>
+
+
+<!-- ── Toast ───────────────────────────────────────────────────────────────── -->
+<div id="toast" class="toast hidden"></div>
+
+
+<script src="/static/app.js"></script>
+</body>
+</html>
