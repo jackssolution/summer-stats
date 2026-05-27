@@ -11,14 +11,21 @@ if _PG:
     import psycopg2
     import psycopg2.extras
 
+    def _pg_connect():
+        url = _DB_URL
+        if "sslmode" not in url:
+            url += ("&" if "?" in url else "?") + "sslmode=require"
+        return psycopg2.connect(url,
+                                cursor_factory=psycopg2.extras.RealDictCursor,
+                                connect_timeout=15)
+
 
 # ── Connection ──────────────────────────────────────────────────────────────────
 
 @contextmanager
 def get_db():
     if _PG:
-        conn = psycopg2.connect(_DB_URL, cursor_factory=psycopg2.extras.RealDictCursor,
-                                sslmode="require")
+        conn = _pg_connect()
         try:
             yield conn
             conn.commit()
