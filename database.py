@@ -17,7 +17,8 @@ if _PG:
 @contextmanager
 def get_db():
     if _PG:
-        conn = psycopg2.connect(_DB_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+        conn = psycopg2.connect(_DB_URL, cursor_factory=psycopg2.extras.RealDictCursor,
+                                sslmode="require")
         try:
             yield conn
             conn.commit()
