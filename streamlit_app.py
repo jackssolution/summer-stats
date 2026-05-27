@@ -1,8 +1,17 @@
+import os
 import streamlit as st
 import pandas as pd
 from datetime import date
 
+# Inject DATABASE_URL from Streamlit Cloud secrets before database module loads
+try:
+    if "DATABASE_URL" in st.secrets:
+        os.environ.setdefault("DATABASE_URL", st.secrets["DATABASE_URL"])
+except Exception:
+    pass
+
 import database as db
+db.init_db()
 
 st.set_page_config(
     page_title="Summer Ball Tracker 2026",
