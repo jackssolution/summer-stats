@@ -145,8 +145,6 @@ label { color: #4B607A !important; }
 }
 .hi  .stat-val { color: #FFD700; }
 .hi  .stat-lbl { color: #4A3800; }
-.grn .stat-val { color: #CBD5E1; }
-.grn .stat-lbl { color: #263347; }
 
 /* ── Player header ────────────────────────────────────────────── */
 .p-name {
@@ -524,13 +522,13 @@ def show_pitching(player, show_log=False):
     html = (
         _stat("G",       pt.get('G', 0))                          +
         _stat("IP",      pt.get('IP', 0.0))                       +
-        _stat("ERA",     f"{pt.get('ERA',  0.0):.2f}")              +
-        _stat("WHIP",    f"{pt.get('WHIP', 0.0):.2f}", "hi")      +
-        _stat("K",       pt.get('K', 0),               "grn")     +
+        _stat("ERA",     f"{pt.get('ERA',  0.0):.2f}")            +
+        _stat("WHIP",    f"{pt.get('WHIP', 0.0):.2f}", "hi")     +
+        _stat("K",       pt.get('K', 0))                          +
         _stat("BB",      pt.get('BB', 0))                         +
         _stat("R",       pt.get('R', 0))                          +
         _stat("ER",      pt.get('ER', 0))                         +
-        _stat("K/9",     f"{pt.get('K_per9',  0.0):.1f}", "grn") +
+        _stat("K/9",     f"{pt.get('K_per9',  0.0):.1f}")        +
         _stat("BB/9",    f"{pt.get('BB_per9', 0.0):.1f}")        +
         _stat("STR%",    f"{pt.get('strike_pct', 0.0):.1f}%")    +
         _stat("PITCHES", pt.get('total_pitches', 0))
@@ -546,13 +544,13 @@ def show_batting(player, show_log=False):
     bt = player.get('batting_totals', {})
     html = (
         _stat("G",   bt.get('G', 0))                           +
-        _stat("AVG", f"{bt.get('AVG', 0.0):.3f}")              +
+        _stat("AVG", f"{bt.get('AVG', 0.0):.3f}")             +
         _stat("OBP", f"{bt.get('OBP', 0.0):.3f}")             +
         _stat("SLG", f"{bt.get('SLG', 0.0):.3f}")             +
         _stat("OPS", f"{bt.get('OPS', 0.0):.3f}", "hi")       +
         _stat("AB",  bt.get('AB', 0))                          +
-        _stat("H",   bt.get('H', 0),  "grn")                  +
-        _stat("HR",  bt.get('HR', 0), "grn")                  +
+        _stat("H",   bt.get('H', 0))                           +
+        _stat("HR",  bt.get('HR', 0))                          +
         _stat("BB",  bt.get('BB', 0))                          +
         _stat("R",   bt.get('R', 0))                           +
         _stat("RBI", bt.get('RBI', 0))                         +
@@ -563,6 +561,81 @@ def show_batting(player, show_log=False):
         df = pd.DataFrame(player['batting'])
         cols = [c for c in BAT_COLS if c in df.columns]
         st.dataframe(df[cols].rename(columns=BAT_RENAME), hide_index=True, use_container_width=True)
+
+
+# ── Player card — fragment so log toggle only rerenders this card ───────────────
+
+@st.fragment
+def render_player_card(pid):
+    # Pull fresh player data from session-state cache (works on fragment reruns too)
+    player = next((p for p in st.session_state.get("_data", []) if p['id'] == pid), None)
+    if not player:
+        return
+
+    pos = player['position']
+    arm = f"{player['throws']}HP" if pos != 'hitter' else f"Bats {player['bats']}"
+    pos_label = "Two-Way" if pos == 'two-way' else pos.capitalize()
+
+    log_key = f"show_log_{pid}"
+    st.session_state.setdefault(log_key, False)
+    show_log = st.session_state[log_key]
+
+    active = st.session_state.get("active_form")
+
+    with st.container(border=True):
+        # Header row
+        nc1, nc2, nc3 = st.columns([6, 1, 1])
+        nc1.markdown(
+            f'<div class="p-name">{player["name"]}</div>'
+            f'<div class="p-meta">'
+            f'<span class="pill pill-team">{player["team"]}</span>'
+            f'<span class="pill pill-pos">{pos_label}</span>'
+            f'<span class="pill pill-hand">{arm}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        if pos in ('pitcher', 'two-way'):
+            with nc2:
+                if st.button("+ Pitching", key=f"pbtn_{pid}", use_container_width=True):
+                    st.session_state["active_form"] = {"pid": pid, "type": "pitch"}
+                    st.rerun()
+        if pos in ('hitter', 'two-way'):
+            with nc3:
+                if st.button("+ Batting", key=f"bbtn_{pid}", use_container_width=True):
+                    st.session_state["active_form"] = {"pid": pid, "type": "bat"}
+                    st.rerun()
+
+        # Pitching stats
+        if pos in ('pitcher', 'two-way'):
+            if pos == 'two-way':
+                st.markdown('<div class="sub-hdr">Pitching</div>', unsafe_allow_html=True)
+            show_pitching(player, show_log)
+
+        if pos == 'two-way':
+            st.divider()
+
+        # Batting stats
+        if pos in ('hitter', 'two-way'):
+            if pos == 'two-way':
+                st.markdown('<div class="sub-hdr">Batting</div>', unsafe_allow_html=True)
+            show_batting(player, show_log)
+
+        # Game log toggle — NO st.rerun(); fragment reruns itself on button click
+        has_games = bool(player['pitching'] or player['batting'])
+        if has_games:
+            log_label = "Hide Game Log" if show_log else "Show Game Log"
+            if st.button(log_label, key=f"log_toggle_{pid}", use_container_width=True):
+                st.session_state[log_key] = not show_log
+
+        # Inline form — stays open when switching filters
+        if active and active.get("pid") == pid:
+            if active.get("type") == "pitch" and pos in ('pitcher', 'two-way'):
+                show_pitching_form(pid, edit_id=active.get("edit_id"))
+            elif active.get("type") == "bat" and pos in ('hitter', 'two-way'):
+                show_batting_form(pid, edit_id=active.get("edit_id"))
+
+        # Delete section
+        show_delete_section(player)
 
 
 # ── Player cards ───────────────────────────────────────────────────────────────
@@ -581,77 +654,10 @@ def passes_filter(player):
         pos_ok = True
     return team_ok and pos_ok
 
-active = st.session_state.get("active_form")
-
 for section_label, section_players in [("PITCHERS", pitchers), ("HITTERS", hitters)]:
     visible = [p for p in section_players if passes_filter(p)]
     if not visible:
         continue
     st.markdown(f'<div class="sec-hdr">{section_label}</div>', unsafe_allow_html=True)
-
     for player in visible:
-        pos = player['position']
-        pid = player['id']
-        arm = f"{player['throws']}HP" if pos != 'hitter' else f"Bats {player['bats']}"
-        pos_label = "Two-Way" if pos == 'two-way' else pos.capitalize()
-
-        # Per-player game-log visibility (default: hidden)
-        log_key = f"show_log_{pid}"
-        st.session_state.setdefault(log_key, False)
-        show_log = st.session_state[log_key]
-
-        with st.container(border=True):
-            # Header row
-            nc1, nc2, nc3 = st.columns([6, 1, 1])
-            nc1.markdown(
-                f'<div class="p-name">{player["name"]}</div>'
-                f'<div class="p-meta">'
-                f'<span class="pill pill-team">{player["team"]}</span>'
-                f'<span class="pill pill-pos">{pos_label}</span>'
-                f'<span class="pill pill-hand">{arm}</span>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-            if pos in ('pitcher', 'two-way'):
-                with nc2:
-                    if st.button("+ Pitching", key=f"pbtn_{pid}", use_container_width=True):
-                        st.session_state["active_form"] = {"pid": pid, "type": "pitch"}
-                        st.rerun()
-            if pos in ('hitter', 'two-way'):
-                with nc3:
-                    if st.button("+ Batting", key=f"bbtn_{pid}", use_container_width=True):
-                        st.session_state["active_form"] = {"pid": pid, "type": "bat"}
-                        st.rerun()
-
-            # Pitching stats
-            if pos in ('pitcher', 'two-way'):
-                if pos == 'two-way':
-                    st.markdown('<div class="sub-hdr">Pitching</div>', unsafe_allow_html=True)
-                show_pitching(player, show_log)
-
-            if pos == 'two-way':
-                st.divider()
-
-            # Batting stats
-            if pos in ('hitter', 'two-way'):
-                if pos == 'two-way':
-                    st.markdown('<div class="sub-hdr">Batting</div>', unsafe_allow_html=True)
-                show_batting(player, show_log)
-
-            # Game log toggle
-            has_games = bool(player['pitching'] or player['batting'])
-            if has_games:
-                log_label = "Hide Game Log" if show_log else "Show Game Log"
-                if st.button(log_label, key=f"log_toggle_{pid}", use_container_width=True):
-                    st.session_state[log_key] = not show_log
-                    st.rerun()
-
-            # Inline form — stays open when switching filters
-            if active and active.get("pid") == pid:
-                if active.get("type") == "pitch" and pos in ('pitcher', 'two-way'):
-                    show_pitching_form(pid, edit_id=active.get("edit_id"))
-                elif active.get("type") == "bat" and pos in ('hitter', 'two-way'):
-                    show_batting_form(pid, edit_id=active.get("edit_id"))
-
-            # Delete section
-            show_delete_section(player)
+        render_player_card(player['id'])
