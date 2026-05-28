@@ -207,6 +207,68 @@ label { color: #4B607A !important; }
     text-transform: uppercase;
     margin-top: 6px;
 }
+
+/* ── Mobile ───────────────────────────────────────────────────── */
+@media screen and (max-width: 640px) {
+
+    /* Tighter page margins */
+    [data-testid="stMainBlockContainer"] {
+        padding: 0.75rem 0.5rem 2rem !important;
+    }
+
+    /* Stack every st.columns() layout into a single column */
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap !important;
+        gap: 0.35rem !important;
+    }
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        min-width: 100% !important;
+        flex: 1 1 100% !important;
+        width: 100% !important;
+    }
+
+    /* Stat grid: single scrollable row instead of wrapping chaos */
+    .stat-row {
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .stat-row::-webkit-scrollbar { display: none; }
+    .stat-item {
+        flex-shrink: 0 !important;
+        min-width: 64px !important;
+        padding: 9px 5px 7px !important;
+    }
+    .stat-val { font-size: 1.05rem !important; }
+    .stat-lbl { font-size: 0.5rem !important; }
+
+    /* Title */
+    .app-title { font-size: 1.1rem !important; }
+    .app-sub   { font-size: 0.52rem !important; letter-spacing: 0.08em !important; }
+
+    /* Player name & pills */
+    .p-name { font-size: 0.88rem !important; }
+    .pill   { font-size: 0.55rem !important; padding: 2px 7px !important; }
+
+    /* Larger touch targets on buttons */
+    [data-testid="stButton"] > button {
+        padding: 0.45rem 0.7rem !important;
+        font-size: 0.72rem !important;
+        min-height: 38px !important;
+    }
+
+    /* Filter pills — tighter gap, slightly smaller */
+    div[role="radiogroup"] { gap: 0.25rem !important; }
+    div[role="radiogroup"] > label { padding: 4px 10px !important; }
+    div[role="radiogroup"] > label p {
+        font-size: 0.62rem !important;
+        letter-spacing: 0.04em !important;
+    }
+
+    /* Section header */
+    .sec-hdr { font-size: 0.55rem !important; letter-spacing: 0.14em !important; }
+}
 </style>
 """, unsafe_allow_html=True)
 
