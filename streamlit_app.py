@@ -23,8 +23,8 @@ st.markdown("""
 <style>
 /* ── Base ─────────────────────────────────────────────────────── */
 [data-testid="stAppViewContainer"] { background-color: #090D16; color: #E2E8F0; }
-[data-testid="stHeader"]           { background-color: #090D16 !important; border-bottom: 1px solid #131C2E; }
-[data-testid="stMainBlockContainer"]{ padding-top: 2rem; }
+[data-testid="stHeader"]            { display: none !important; }
+[data-testid="stMainBlockContainer"]{ padding-top: 1.5rem; }
 [data-testid="stSidebar"]          { background-color: #0F1623; }
 #MainMenu, footer                  { visibility: hidden; }
 hr { border-color: #131C2E !important; margin: 0.6rem 0 !important; }
