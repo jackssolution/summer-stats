@@ -21,35 +21,194 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-[data-testid="stAppViewContainer"] { background-color: #0d1117; color: #e6edf3; }
-[data-testid="stHeader"] { background-color: #161b22; }
-[data-testid="stSidebar"] { background-color: #161b22; }
-[data-testid="stMainBlockContainer"] { padding-top: 1.5rem; }
-[data-testid="stMetricLabel"] { font-size: 0.7rem; color: #8b949e; text-transform: uppercase; }
-[data-testid="stMetricValue"] { font-size: 1.1rem; color: #e6edf3; }
+/* ── Base ─────────────────────────────────────────────────────── */
+[data-testid="stAppViewContainer"] { background-color: #090D16; color: #E2E8F0; }
+[data-testid="stHeader"]           { background-color: #090D16 !important; border-bottom: 1px solid #131C2E; }
+[data-testid="stMainBlockContainer"]{ padding-top: 2rem; }
+[data-testid="stSidebar"]          { background-color: #0F1623; }
+#MainMenu, footer                  { visibility: hidden; }
+hr { border-color: #131C2E !important; margin: 0.6rem 0 !important; }
+
+/* ── Player cards ─────────────────────────────────────────────── */
 [data-testid="stVerticalBlockBorderWrapper"] {
-    background-color: #161b22;
-    border: 1px solid #30363d !important;
-    border-radius: 8px;
+    background-color: #0D1422 !important;
+    border: 1px solid #17243A !important;
+    border-left: 3px solid #F59E0B !important;
+    border-radius: 10px !important;
 }
+
+/* ── Buttons ──────────────────────────────────────────────────── */
 [data-testid="stButton"] > button {
-    background: #21262d;
-    border: 1px solid #30363d;
-    color: #e6edf3;
+    background: #131C2E;
+    border: 1px solid #1E2D47;
+    color: #7B8FA8;
     border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transition: all 0.15s;
 }
-[data-testid="stButton"] > button:hover { background: #30363d; border-color: #8b949e; }
-div[role="radiogroup"] { gap: 0.4rem; }
-div[role="radiogroup"] label { color: #e6edf3 !important; }
-div[role="radiogroup"] label p { color: #e6edf3 !important; }
-#MainMenu { visibility: hidden; }
-footer { visibility: hidden; }
-/* input / widget labels */
-[data-testid="stWidgetLabel"] p { color: #e6edf3 !important; }
-[data-testid="stWidgetLabel"] { color: #e6edf3 !important; }
-label { color: #e6edf3 !important; }
-/* expander label */
-[data-testid="stExpander"] summary p { color: #e6edf3 !important; }
+[data-testid="stButton"] > button:hover {
+    background: #1A2640;
+    border-color: #F59E0B;
+    color: #F59E0B;
+}
+[data-testid="stButton"] > button[kind="primary"] {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.45);
+    color: #F59E0B;
+}
+[data-testid="stButton"] > button[kind="primary"]:hover {
+    background: rgba(245,158,11,0.2);
+}
+
+/* ── Filters — radio → pill tabs ──────────────────────────────── */
+div[role="radiogroup"] { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+div[role="radiogroup"] > label {
+    background: #111827;
+    border: 1px solid #1E2D47;
+    border-radius: 99px;
+    padding: 4px 13px !important;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex !important;
+    align-items: center;
+}
+div[role="radiogroup"] > label > div:first-child { display: none; }
+div[role="radiogroup"] > label p {
+    color: #4B607A !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0 !important;
+    line-height: 1.5 !important;
+}
+div[role="radiogroup"] > label:has(input:checked) {
+    background: rgba(245,158,11,0.08);
+    border-color: rgba(245,158,11,0.5);
+}
+div[role="radiogroup"] > label:has(input:checked) p { color: #F59E0B !important; }
+
+/* ── Widget labels ────────────────────────────────────────────── */
+[data-testid="stWidgetLabel"] p,
+[data-testid="stWidgetLabel"] { color: #4B607A !important; font-size: 0.68rem !important; }
+label { color: #4B607A !important; }
+
+/* ── Expander ─────────────────────────────────────────────────── */
+[data-testid="stExpander"] {
+    border: 1px solid #131C2E !important;
+    border-radius: 6px !important;
+    background: transparent !important;
+}
+[data-testid="stExpander"] summary p {
+    color: #334155 !important;
+    font-size: 0.65rem !important;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* ── Stat grid ────────────────────────────────────────────────── */
+.stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    background: #060A12;
+    border-radius: 8px;
+    border: 1px solid #131C2E;
+    margin: 0.55rem 0 0.8rem;
+    overflow: hidden;
+}
+.stat-item {
+    flex: 1;
+    min-width: 52px;
+    padding: 11px 6px 8px;
+    text-align: center;
+    border-right: 1px solid #111827;
+}
+.stat-item:last-child { border-right: none; }
+.stat-val {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #CBD5E1;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+}
+.stat-lbl {
+    font-size: 0.54rem;
+    font-weight: 800;
+    color: #263347;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+}
+.hi  .stat-val { color: #F59E0B; }
+.hi  .stat-lbl { color: #5C3A06; }
+.grn .stat-val { color: #34D399; }
+.grn .stat-lbl { color: #064E3B; }
+
+/* ── Player header ────────────────────────────────────────────── */
+.p-name {
+    font-size: 1.0rem;
+    font-weight: 700;
+    color: #F1F5F9;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    margin-bottom: 6px;
+}
+.p-meta { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.pill {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 99px;
+    font-size: 0.59rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    line-height: 1.7;
+}
+.pill-team { background: #111827; color: #4B607A; border: 1px solid #1E2D47; }
+.pill-pos  { background: rgba(245,158,11,0.07); color: #F59E0B; border: 1px solid rgba(245,158,11,0.25); }
+.pill-hand { background: #0D1422; color: #334155; border: 1px solid #1A2438; }
+
+/* ── Section & sub-section headers ───────────────────────────── */
+.sec-hdr {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    color: #F59E0B;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #131C2E;
+    margin: 0.25rem 0 1rem;
+}
+.sub-hdr {
+    font-size: 0.56rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #263347;
+    text-transform: uppercase;
+    margin: 0.35rem 0 0;
+}
+
+/* ── App title ────────────────────────────────────────────────── */
+.app-title {
+    font-size: 1.55rem;
+    font-weight: 900;
+    color: #F1F5F9;
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+.app-title .yr { color: #F59E0B; }
+.app-sub {
+    font-size: 0.6rem;
+    color: #2D4060;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 6px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -58,8 +217,10 @@ label { color: #e6edf3 !important; }
 
 hcol1, hcol2 = st.columns([5, 1])
 with hcol1:
-    st.markdown("## Summer Ball Tracker 2026")
-    st.caption("Northwoods League · Cape Cod Baseball League · NECBL · 2026 Season")
+    st.markdown("""
+<div class="app-title">SUMMER BALL <span class="yr">2026</span></div>
+<div class="app-sub">Northwoods League &nbsp;&middot;&nbsp; Cape Cod Baseball League &nbsp;&middot;&nbsp; NECBL</div>
+""", unsafe_allow_html=True)
 with hcol2:
     if st.button("Refresh Stats", use_container_width=True):
         try:
@@ -68,6 +229,8 @@ with hcol2:
             st.toast("Scrape started")
         except Exception as e:
             st.toast(f"Scrape error: {e}")
+
+st.markdown("<div style='margin-top:1.1rem'></div>", unsafe_allow_html=True)
 
 # ── Filters ────────────────────────────────────────────────────────────────────
 
@@ -110,6 +273,14 @@ def _i(prefix, key):
 
 def _s(prefix, key):
     return str(st.session_state.get(f"{prefix}_{key}") or "")
+
+def _stat(label, value, cls=""):
+    return (
+        f'<div class="stat-item {cls}">'
+        f'<div class="stat-val">{value}</div>'
+        f'<div class="stat-lbl">{label}</div>'
+        f'</div>'
+    )
 
 
 # ── Inline pitching form ───────────────────────────────────────────────────────
@@ -239,7 +410,6 @@ def show_batting_form(pid, edit_id=None):
 # ── Delete section ─────────────────────────────────────────────────────────────
 
 def _load_pitch_edit(pid, g):
-    """Pre-populate session state for a pitching edit."""
     px = f"pf_{pid}"
     from datetime import date as _date
     try:
@@ -265,7 +435,6 @@ def _load_pitch_edit(pid, g):
 
 
 def _load_bat_edit(pid, g):
-    """Pre-populate session state for a batting edit."""
     px = f"bf_{pid}"
     from datetime import date as _date
     try:
@@ -345,19 +514,21 @@ def show_delete_section(player):
 
 def show_pitching(player):
     pt = player.get('pitching_totals', {})
-    m = st.columns(12)
-    m[0].metric("G",        pt.get('G', 0))
-    m[1].metric("IP",       pt.get('IP', 0.0))
-    m[2].metric("ERA",      f"{pt.get('ERA', 0.0):.2f}")
-    m[3].metric("WHIP",     f"{pt.get('WHIP', 0.0):.2f}")
-    m[4].metric("K",        pt.get('K', 0))
-    m[5].metric("BB",       pt.get('BB', 0))
-    m[6].metric("R",        pt.get('R', 0))
-    m[7].metric("ER",       pt.get('ER', 0))
-    m[8].metric("K/9",      f"{pt.get('K_per9', 0.0):.1f}")
-    m[9].metric("BB/9",     f"{pt.get('BB_per9', 0.0):.1f}")
-    m[10].metric("STR%",    f"{pt.get('strike_pct', 0.0):.1f}%")
-    m[11].metric("PITCHES", pt.get('total_pitches', 0))
+    html = (
+        _stat("G",       pt.get('G', 0))                          +
+        _stat("IP",      pt.get('IP', 0.0))                       +
+        _stat("ERA",     f"{pt.get('ERA',  0.0):.2f}", "hi")      +
+        _stat("WHIP",    f"{pt.get('WHIP', 0.0):.2f}", "hi")      +
+        _stat("K",       pt.get('K', 0),               "grn")     +
+        _stat("BB",      pt.get('BB', 0))                         +
+        _stat("R",       pt.get('R', 0))                          +
+        _stat("ER",      pt.get('ER', 0))                         +
+        _stat("K/9",     f"{pt.get('K_per9',  0.0):.1f}", "grn") +
+        _stat("BB/9",    f"{pt.get('BB_per9', 0.0):.1f}")        +
+        _stat("STR%",    f"{pt.get('strike_pct', 0.0):.1f}%")    +
+        _stat("PITCHES", pt.get('total_pitches', 0))
+    )
+    st.markdown(f'<div class="stat-row">{html}</div>', unsafe_allow_html=True)
     if player['pitching']:
         df = pd.DataFrame(player['pitching'])
         cols = [c for c in PITCH_COLS if c in df.columns]
@@ -366,19 +537,21 @@ def show_pitching(player):
 
 def show_batting(player):
     bt = player.get('batting_totals', {})
-    m = st.columns(12)
-    m[0].metric("G",   bt.get('G', 0))
-    m[1].metric("AVG", f"{bt.get('AVG', 0.0):.3f}")
-    m[2].metric("OBP", f"{bt.get('OBP', 0.0):.3f}")
-    m[3].metric("SLG", f"{bt.get('SLG', 0.0):.3f}")
-    m[4].metric("OPS", f"{bt.get('OPS', 0.0):.3f}")
-    m[5].metric("AB",  bt.get('AB', 0))
-    m[6].metric("H",   bt.get('H', 0))
-    m[7].metric("HR",  bt.get('HR', 0))
-    m[8].metric("BB",  bt.get('BB', 0))
-    m[9].metric("R",   bt.get('R', 0))
-    m[10].metric("RBI", bt.get('RBI', 0))
-    m[11].metric("SB",  bt.get('SB', 0))
+    html = (
+        _stat("G",   bt.get('G', 0))                           +
+        _stat("AVG", f"{bt.get('AVG', 0.0):.3f}", "hi")       +
+        _stat("OBP", f"{bt.get('OBP', 0.0):.3f}")             +
+        _stat("SLG", f"{bt.get('SLG', 0.0):.3f}")             +
+        _stat("OPS", f"{bt.get('OPS', 0.0):.3f}", "hi")       +
+        _stat("AB",  bt.get('AB', 0))                          +
+        _stat("H",   bt.get('H', 0),  "grn")                  +
+        _stat("HR",  bt.get('HR', 0), "grn")                  +
+        _stat("BB",  bt.get('BB', 0))                          +
+        _stat("R",   bt.get('R', 0))                           +
+        _stat("RBI", bt.get('RBI', 0))                         +
+        _stat("SB",  bt.get('SB', 0))
+    )
+    st.markdown(f'<div class="stat-row">{html}</div>', unsafe_allow_html=True)
     if player['batting']:
         df = pd.DataFrame(player['batting'])
         cols = [c for c in BAT_COLS if c in df.columns]
@@ -401,25 +574,31 @@ def passes_filter(player):
         pos_ok = True
     return team_ok and pos_ok
 
-active = st.session_state.get("active_form")  # {"pid": int, "type": "pitch"|"bat"}
+active = st.session_state.get("active_form")
 
 for section_label, section_players in [("PITCHERS", pitchers), ("HITTERS", hitters)]:
     visible = [p for p in section_players if passes_filter(p)]
     if not visible:
         continue
-    st.markdown(f"###### {section_label}")
+    st.markdown(f'<div class="sec-hdr">{section_label}</div>', unsafe_allow_html=True)
 
     for player in visible:
         pos = player['position']
         pid = player['id']
         arm = f"{player['throws']}HP" if pos != 'hitter' else f"Bats {player['bats']}"
-        pos_label = "TWO-WAY" if pos == 'two-way' else pos.upper()
+        pos_label = "Two-Way" if pos == 'two-way' else pos.capitalize()
 
         with st.container(border=True):
             # Header row
             nc1, nc2, nc3 = st.columns([6, 1, 1])
             nc1.markdown(
-                f"**{player['name']}** &nbsp; `{player['team']}` &nbsp; `{arm}` &nbsp; `{pos_label}`"
+                f'<div class="p-name">{player["name"]}</div>'
+                f'<div class="p-meta">'
+                f'<span class="pill pill-team">{player["team"]}</span>'
+                f'<span class="pill pill-pos">{pos_label}</span>'
+                f'<span class="pill pill-hand">{arm}</span>'
+                f'</div>',
+                unsafe_allow_html=True,
             )
             if pos in ('pitcher', 'two-way'):
                 with nc2:
@@ -435,7 +614,7 @@ for section_label, section_players in [("PITCHERS", pitchers), ("HITTERS", hitte
             # Pitching stats
             if pos in ('pitcher', 'two-way'):
                 if pos == 'two-way':
-                    st.caption("PITCHING")
+                    st.markdown('<div class="sub-hdr">Pitching</div>', unsafe_allow_html=True)
                 show_pitching(player)
 
             if pos == 'two-way':
@@ -444,7 +623,7 @@ for section_label, section_players in [("PITCHERS", pitchers), ("HITTERS", hitte
             # Batting stats
             if pos in ('hitter', 'two-way'):
                 if pos == 'two-way':
-                    st.caption("BATTING")
+                    st.markdown('<div class="sub-hdr">Batting</div>', unsafe_allow_html=True)
                 show_batting(player)
 
             # Inline form — stays open when switching filters
