@@ -143,8 +143,8 @@ label { color: #4B607A !important; }
     letter-spacing: 0.1em;
     margin-top: 4px;
 }
-.hi  .stat-val { color: #CBD5E1; }
-.hi  .stat-lbl { color: #263347; }
+.hi  .stat-val { color: #FFD700; }
+.hi  .stat-lbl { color: #4A3800; }
 .grn .stat-val { color: #CBD5E1; }
 .grn .stat-lbl { color: #263347; }
 
@@ -524,7 +524,7 @@ def show_pitching(player, show_log=False):
     html = (
         _stat("G",       pt.get('G', 0))                          +
         _stat("IP",      pt.get('IP', 0.0))                       +
-        _stat("ERA",     f"{pt.get('ERA',  0.0):.2f}", "hi")      +
+        _stat("ERA",     f"{pt.get('ERA',  0.0):.2f}")              +
         _stat("WHIP",    f"{pt.get('WHIP', 0.0):.2f}", "hi")      +
         _stat("K",       pt.get('K', 0),               "grn")     +
         _stat("BB",      pt.get('BB', 0))                         +
@@ -546,7 +546,7 @@ def show_batting(player, show_log=False):
     bt = player.get('batting_totals', {})
     html = (
         _stat("G",   bt.get('G', 0))                           +
-        _stat("AVG", f"{bt.get('AVG', 0.0):.3f}", "hi")       +
+        _stat("AVG", f"{bt.get('AVG', 0.0):.3f}")              +
         _stat("OBP", f"{bt.get('OBP', 0.0):.3f}")             +
         _stat("SLG", f"{bt.get('SLG', 0.0):.3f}")             +
         _stat("OPS", f"{bt.get('OPS', 0.0):.3f}", "hi")       +
