@@ -44,6 +44,12 @@ div[role="radiogroup"] label { color: #e6edf3 !important; }
 div[role="radiogroup"] label p { color: #e6edf3 !important; }
 #MainMenu { visibility: hidden; }
 footer { visibility: hidden; }
+/* input / widget labels */
+[data-testid="stWidgetLabel"] p { color: #e6edf3 !important; }
+[data-testid="stWidgetLabel"] { color: #e6edf3 !important; }
+label { color: #e6edf3 !important; }
+/* expander label */
+[data-testid="stExpander"] summary p { color: #e6edf3 !important; }
 </style>
 """, unsafe_allow_html=True)
 
