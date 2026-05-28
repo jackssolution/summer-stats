@@ -229,7 +229,7 @@ def show_delete_section(player):
             for g in player['pitching']:
                 ck = f"conf_del_p_{g['id']}"
                 c1, c2 = st.columns([5, 1])
-                c1.caption(f"{g['game_date']}  vs {g['opponent']}  —  {g['IP']} IP, {g['K']} K, {g['ER']} ER")
+                c1.write(f"{g['game_date']}  vs {g['opponent']}  —  {g['IP']} IP, {g['K']} K, {g['ER']} ER")
                 if c2.button("Delete", key=f"del_p_{g['id']}"):
                     st.session_state[ck] = True
                 if st.session_state.get(ck):
@@ -249,7 +249,7 @@ def show_delete_section(player):
             for g in player['batting']:
                 ck = f"conf_del_b_{g['id']}"
                 c1, c2 = st.columns([5, 1])
-                c1.caption(f"{g['game_date']}  vs {g['opponent']}  —  {g['AB']} AB, {g['H']} H")
+                c1.write(f"{g['game_date']}  vs {g['opponent']}  —  {g['AB']} AB, {g['H']} H")
                 if c2.button("Delete", key=f"del_b_{g['id']}"):
                     st.session_state[ck] = True
                 if st.session_state.get(ck):
