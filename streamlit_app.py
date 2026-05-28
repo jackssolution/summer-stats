@@ -16,7 +16,7 @@ db.init_db()
 st.set_page_config(
     page_title="Summer Ball Tracker 2026",
     layout="wide",
-    page_icon="⚾",
+    page_icon=None,
 )
 
 st.markdown("""
@@ -58,16 +58,16 @@ label { color: #e6edf3 !important; }
 
 hcol1, hcol2 = st.columns([5, 1])
 with hcol1:
-    st.markdown("## ⚾ Summer Ball Tracker 2026")
+    st.markdown("## Summer Ball Tracker 2026")
     st.caption("Northwoods League · Cape Cod Baseball League · NECBL · 2026 Season")
 with hcol2:
-    if st.button("↻ Refresh Stats", use_container_width=True):
+    if st.button("Refresh Stats", use_container_width=True):
         try:
             import scraper, threading
             threading.Thread(target=lambda: scraper.scrape_all(headless=True), daemon=True).start()
-            st.toast("Scrape started", icon="↻")
+            st.toast("Scrape started")
         except Exception as e:
-            st.toast(f"Scrape error: {e}", icon="⚠️")
+            st.toast(f"Scrape error: {e}")
 
 # ── Filters ────────────────────────────────────────────────────────────────────
 
@@ -117,7 +117,7 @@ def _s(prefix, key):
 def show_pitching_form(pid, edit_id=None):
     px = f"pf_{pid}"
     st.session_state.setdefault(f"{px}_ip", "0.0")
-    mode_label = "✏️ Edit Pitching Line" if edit_id else "➕ Add Pitching Line"
+    mode_label = "Edit Pitching Line" if edit_id else "Add Pitching Line"
 
     with st.container(border=True):
         st.markdown(f"##### {mode_label}")
@@ -151,7 +151,7 @@ def show_pitching_form(pid, edit_id=None):
         n.number_input("Total Pitches", key=f"{px}_pit",   min_value=0, step=1)
 
         sc, cc = st.columns(2)
-        if sc.button("✓ Save Game", key=f"{px}_save", type="primary", use_container_width=True):
+        if sc.button("Save Game", key=f"{px}_save", type="primary", use_container_width=True):
             parts = _s(px, "ip").split(".")
             outs = int(parts[0]) * 3 + (int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0)
             strikes = _i(px, "str"); balls = _i(px, "balls")
@@ -175,7 +175,7 @@ def show_pitching_form(pid, edit_id=None):
                 st.session_state.pop(f"{px}_{k2}", None)
             st.rerun()
 
-        if cc.button("✗ Cancel", key=f"{px}_cancel", use_container_width=True):
+        if cc.button("Cancel", key=f"{px}_cancel", use_container_width=True):
             st.session_state["active_form"] = None
             st.rerun()
 
@@ -184,7 +184,7 @@ def show_pitching_form(pid, edit_id=None):
 
 def show_batting_form(pid, edit_id=None):
     px = f"bf_{pid}"
-    mode_label = "✏️ Edit Batting Line" if edit_id else "➕ Add Batting Line"
+    mode_label = "Edit Batting Line" if edit_id else "Add Batting Line"
 
     with st.container(border=True):
         st.markdown(f"##### {mode_label}")
@@ -211,7 +211,7 @@ def show_batting_form(pid, edit_id=None):
         k2.number_input("SB",  key=f"{px}_sb",  min_value=0, step=1)
 
         sc, cc = st.columns(2)
-        if sc.button("✓ Save Game", key=f"{px}_save", type="primary", use_container_width=True):
+        if sc.button("Save Game", key=f"{px}_save", type="primary", use_container_width=True):
             ab=_i(px,"ab"); bb=_i(px,"bb"); hbp=_i(px,"hbp")
             kwargs = dict(
                 game_date=str(st.session_state.get(f"{px}_date", date.today())),
@@ -231,7 +231,7 @@ def show_batting_form(pid, edit_id=None):
                 st.session_state.pop(f"{px}_{k2}", None)
             st.rerun()
 
-        if cc.button("✗ Cancel", key=f"{px}_cancel", use_container_width=True):
+        if cc.button("Cancel", key=f"{px}_cancel", use_container_width=True):
             st.session_state["active_form"] = None
             st.rerun()
 
@@ -291,7 +291,7 @@ def show_delete_section(player):
     if not player['pitching'] and not player['batting']:
         return
     pid = player['id']
-    with st.expander("✏️ Edit / 🗑 Delete a game line"):
+    with st.expander("Edit / Delete a game line"):
         if player['pitching']:
             if player['batting']:
                 st.markdown("**Pitching**")
