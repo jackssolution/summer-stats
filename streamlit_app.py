@@ -143,10 +143,10 @@ label { color: #4B607A !important; }
     letter-spacing: 0.1em;
     margin-top: 4px;
 }
-.hi  .stat-val { color: #FFD700; }
-.hi  .stat-lbl { color: #4A3800; }
-.grn .stat-val { color: #34D399; }
-.grn .stat-lbl { color: #064E3B; }
+.hi  .stat-val { color: #CBD5E1; }
+.hi  .stat-lbl { color: #263347; }
+.grn .stat-val { color: #CBD5E1; }
+.grn .stat-lbl { color: #263347; }
 
 /* ── Player header ────────────────────────────────────────────── */
 .p-name {
@@ -196,7 +196,7 @@ label { color: #4B607A !important; }
 .app-title {
     font-size: 1.55rem;
     font-weight: 900;
-    color: #F1F5F9;
+    color: #7A0019;
     letter-spacing: -0.03em;
     line-height: 1;
 }
