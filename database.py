@@ -391,6 +391,37 @@ def add_pitching_line(player_id, game_date, opponent, home_away,
         _ex(db, sql, params)
 
 
+def update_batting_line(line_id, game_date, opponent, home_away,
+                        H, doubles, triples, HR, BB, HBP, AB, PA, R=0, RBI=0):
+    with get_db() as db:
+        _ex(db, """
+            UPDATE batting_lines SET
+                game_date=?, opponent=?, home_away=?,
+                H=?, doubles=?, triples=?, HR=?, BB=?, HBP=?, AB=?, PA=?, R=?, RBI=?
+            WHERE id=?
+        """, (game_date, opponent, home_away,
+              H, doubles, triples, HR, BB, HBP, AB, PA, R, RBI, line_id))
+
+
+def update_pitching_line(line_id, game_date, opponent, home_away,
+                         outs, BF, K, BB, HBP, strikes, balls, total_pitches,
+                         H_allowed, HR_allowed, doubles_allowed, triples_allowed,
+                         R=0, ER=0):
+    with get_db() as db:
+        _ex(db, """
+            UPDATE pitching_lines SET
+                game_date=?, opponent=?, home_away=?,
+                outs=?, BF=?, K=?, BB=?, HBP=?,
+                strikes=?, balls=?, total_pitches=?,
+                H_allowed=?, HR_allowed=?, doubles_allowed=?, triples_allowed=?,
+                R=?, ER=?
+            WHERE id=?
+        """, (game_date, opponent, home_away,
+              outs, BF, K, BB, HBP, strikes, balls, total_pitches,
+              H_allowed, HR_allowed, doubles_allowed, triples_allowed,
+              R, ER, line_id))
+
+
 def delete_batting_line(line_id):
     with get_db() as db:
         _ex(db, "DELETE FROM batting_lines WHERE id=?", (line_id,))

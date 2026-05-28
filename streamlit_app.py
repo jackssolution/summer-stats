@@ -114,13 +114,13 @@ def _s(prefix, key):
 
 # ── Inline pitching form ───────────────────────────────────────────────────────
 
-def show_pitching_form(pid):
+def show_pitching_form(pid, edit_id=None):
     px = f"pf_{pid}"
-    # Default IP field if not yet set
     st.session_state.setdefault(f"{px}_ip", "0.0")
+    mode_label = "✏️ Edit Pitching Line" if edit_id else "➕ Add Pitching Line"
 
     with st.container(border=True):
-        st.markdown("##### ➕ Add Pitching Line")
+        st.markdown(f"##### {mode_label}")
         c1, c2, c3 = st.columns(3)
         c1.date_input("Date",     key=f"{px}_date")
         c2.text_input("Opponent", key=f"{px}_opp")
@@ -155,8 +155,7 @@ def show_pitching_form(pid):
             parts = _s(px, "ip").split(".")
             outs = int(parts[0]) * 3 + (int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0)
             strikes = _i(px, "str"); balls = _i(px, "balls")
-            db.add_pitching_line(
-                player_id=pid,
+            kwargs = dict(
                 game_date=str(st.session_state.get(f"{px}_date", date.today())),
                 opponent=_s(px, "opp"),
                 home_away=st.session_state.get(f"{px}_ha", "H"),
@@ -167,6 +166,10 @@ def show_pitching_form(pid):
                 doubles_allowed=_i(px,"2b"), triples_allowed=_i(px,"3b"),
                 R=_i(px,"r"), ER=_i(px,"er"),
             )
+            if edit_id:
+                db.update_pitching_line(edit_id, **kwargs)
+            else:
+                db.add_pitching_line(player_id=pid, **kwargs)
             st.session_state["active_form"] = None
             for k2 in ["ip","opp","bf","k","bb","hbp","r","er","hall","hr","2b","3b","str","balls","pit"]:
                 st.session_state.pop(f"{px}_{k2}", None)
@@ -179,11 +182,12 @@ def show_pitching_form(pid):
 
 # ── Inline batting form ────────────────────────────────────────────────────────
 
-def show_batting_form(pid):
+def show_batting_form(pid, edit_id=None):
     px = f"bf_{pid}"
+    mode_label = "✏️ Edit Batting Line" if edit_id else "➕ Add Batting Line"
 
     with st.container(border=True):
-        st.markdown("##### ➕ Add Batting Line")
+        st.markdown(f"##### {mode_label}")
         c1, c2, c3 = st.columns(3)
         c1.date_input("Date",     key=f"{px}_date")
         c2.text_input("Opponent", key=f"{px}_opp")
@@ -208,8 +212,7 @@ def show_batting_form(pid):
         sc, cc = st.columns(2)
         if sc.button("✓ Save Game", key=f"{px}_save", type="primary", use_container_width=True):
             ab=_i(px,"ab"); bb=_i(px,"bb"); hbp=_i(px,"hbp")
-            db.add_batting_line(
-                player_id=pid,
+            kwargs = dict(
                 game_date=str(st.session_state.get(f"{px}_date", date.today())),
                 opponent=_s(px,"opp"),
                 home_away=st.session_state.get(f"{px}_ha","H"),
@@ -218,6 +221,10 @@ def show_batting_form(pid):
                 PA=_i(px,"pa") or ab+bb+hbp,
                 R=_i(px,"r"), RBI=_i(px,"rbi"),
             )
+            if edit_id:
+                db.update_batting_line(edit_id, **kwargs)
+            else:
+                db.add_batting_line(player_id=pid, **kwargs)
             st.session_state["active_form"] = None
             for k2 in ["opp","ab","pa","h","bb","2b","3b","hr","hbp","r","rbi"]:
                 st.session_state.pop(f"{px}_{k2}", None)
@@ -230,18 +237,71 @@ def show_batting_form(pid):
 
 # ── Delete section ─────────────────────────────────────────────────────────────
 
+def _load_pitch_edit(pid, g):
+    """Pre-populate session state for a pitching edit."""
+    px = f"pf_{pid}"
+    from datetime import date as _date
+    try:
+        st.session_state[f"{px}_date"] = _date.fromisoformat(g['game_date'])
+    except Exception:
+        st.session_state[f"{px}_date"] = _date.today()
+    st.session_state[f"{px}_opp"]   = g.get('opponent', '')
+    st.session_state[f"{px}_ha"]    = g.get('home_away', 'H')
+    st.session_state[f"{px}_ip"]    = str(g.get('IP', '0.0'))
+    st.session_state[f"{px}_bf"]    = g.get('BF', 0)
+    st.session_state[f"{px}_k"]     = g.get('K', 0)
+    st.session_state[f"{px}_bb"]    = g.get('BB', 0)
+    st.session_state[f"{px}_hbp"]   = g.get('HBP', 0)
+    st.session_state[f"{px}_r"]     = g.get('R', 0)
+    st.session_state[f"{px}_er"]    = g.get('ER', 0)
+    st.session_state[f"{px}_hall"]  = g.get('H_allowed', 0)
+    st.session_state[f"{px}_hr"]    = g.get('HR_allowed', 0)
+    st.session_state[f"{px}_2b"]    = g.get('doubles_allowed', 0)
+    st.session_state[f"{px}_3b"]    = g.get('triples_allowed', 0)
+    st.session_state[f"{px}_str"]   = g.get('strikes', 0)
+    st.session_state[f"{px}_balls"] = g.get('balls', 0)
+    st.session_state[f"{px}_pit"]   = g.get('total_pitches', 0)
+
+
+def _load_bat_edit(pid, g):
+    """Pre-populate session state for a batting edit."""
+    px = f"bf_{pid}"
+    from datetime import date as _date
+    try:
+        st.session_state[f"{px}_date"] = _date.fromisoformat(g['game_date'])
+    except Exception:
+        st.session_state[f"{px}_date"] = _date.today()
+    st.session_state[f"{px}_opp"] = g.get('opponent', '')
+    st.session_state[f"{px}_ha"]  = g.get('home_away', 'H')
+    st.session_state[f"{px}_ab"]  = g.get('AB', 0)
+    st.session_state[f"{px}_pa"]  = g.get('PA', 0)
+    st.session_state[f"{px}_h"]   = g.get('H', 0)
+    st.session_state[f"{px}_bb"]  = g.get('BB', 0)
+    st.session_state[f"{px}_2b"]  = g.get('doubles', 0)
+    st.session_state[f"{px}_3b"]  = g.get('triples', 0)
+    st.session_state[f"{px}_hr"]  = g.get('HR', 0)
+    st.session_state[f"{px}_hbp"] = g.get('HBP', 0)
+    st.session_state[f"{px}_r"]   = g.get('R', 0)
+    st.session_state[f"{px}_rbi"] = g.get('RBI', 0)
+
+
 def show_delete_section(player):
     if not player['pitching'] and not player['batting']:
         return
-    with st.expander("🗑 Delete a game line"):
+    pid = player['id']
+    with st.expander("✏️ Edit / 🗑 Delete a game line"):
         if player['pitching']:
             if player['batting']:
                 st.markdown("**Pitching**")
             for g in player['pitching']:
                 ck = f"conf_del_p_{g['id']}"
-                c1, c2 = st.columns([5, 1])
+                c1, c2, c3 = st.columns([5, 1, 1])
                 c1.write(f"{g['game_date']}  vs {g['opponent']}  —  {g['IP']} IP, {g['K']} K, {g['ER']} ER")
-                if c2.button("Delete", key=f"del_p_{g['id']}"):
+                if c2.button("Edit", key=f"edit_p_{g['id']}"):
+                    _load_pitch_edit(pid, g)
+                    st.session_state["active_form"] = {"pid": pid, "type": "pitch", "edit_id": g['id']}
+                    st.rerun()
+                if c3.button("Delete", key=f"del_p_{g['id']}"):
                     st.session_state[ck] = True
                 if st.session_state.get(ck):
                     st.warning(f"Delete {g['game_date']} vs {g['opponent']}?")
@@ -259,9 +319,13 @@ def show_delete_section(player):
                 st.markdown("**Batting**")
             for g in player['batting']:
                 ck = f"conf_del_b_{g['id']}"
-                c1, c2 = st.columns([5, 1])
+                c1, c2, c3 = st.columns([5, 1, 1])
                 c1.write(f"{g['game_date']}  vs {g['opponent']}  —  {g['AB']} AB, {g['H']} H, {g.get('R',0)} R, {g.get('RBI',0)} RBI")
-                if c2.button("Delete", key=f"del_b_{g['id']}"):
+                if c2.button("Edit", key=f"edit_b_{g['id']}"):
+                    _load_bat_edit(pid, g)
+                    st.session_state["active_form"] = {"pid": pid, "type": "bat", "edit_id": g['id']}
+                    st.rerun()
+                if c3.button("Delete", key=f"del_b_{g['id']}"):
                     st.session_state[ck] = True
                 if st.session_state.get(ck):
                     st.warning(f"Delete {g['game_date']} vs {g['opponent']}?")
@@ -382,9 +446,9 @@ for section_label, section_players in [("PITCHERS", pitchers), ("HITTERS", hitte
             # Inline form — stays open when switching filters
             if active and active.get("pid") == pid:
                 if active.get("type") == "pitch" and pos in ('pitcher', 'two-way'):
-                    show_pitching_form(pid)
+                    show_pitching_form(pid, edit_id=active.get("edit_id"))
                 elif active.get("type") == "bat" and pos in ('hitter', 'two-way'):
-                    show_batting_form(pid)
+                    show_batting_form(pid, edit_id=active.get("edit_id"))
 
             # Delete section
             show_delete_section(player)
