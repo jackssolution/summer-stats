@@ -99,7 +99,7 @@ PITCH_COLS   = ['game_date','opponent','home_away','IP','BF','K','BB','HBP',
 PITCH_RENAME = {'game_date':'DATE','opponent':'OPP','home_away':'H/A',
                 'H_allowed':'H','doubles_allowed':'2B','triples_allowed':'3B',
                 'HR_allowed':'HR','strikes':'STR','balls':'BALL','total_pitches':'PIT'}
-BAT_COLS     = ['game_date','opponent','home_away','AB','H','doubles','triples','HR','BB','HBP','PA']
+BAT_COLS     = ['game_date','opponent','home_away','AB','H','doubles','triples','HR','BB','HBP','PA','R','RBI']
 BAT_RENAME   = {'game_date':'DATE','opponent':'OPP','home_away':'H/A','doubles':'2B','triples':'3B'}
 
 
@@ -201,6 +201,10 @@ def show_batting_form(pid):
         g.number_input("HR",  key=f"{px}_hr",  min_value=0, step=1)
         h.number_input("HBP", key=f"{px}_hbp", min_value=0, step=1)
 
+        i2, j2 = st.columns(2)
+        i2.number_input("R",   key=f"{px}_r",   min_value=0, step=1)
+        j2.number_input("RBI", key=f"{px}_rbi", min_value=0, step=1)
+
         sc, cc = st.columns(2)
         if sc.button("✓ Save Game", key=f"{px}_save", type="primary", use_container_width=True):
             ab=_i(px,"ab"); bb=_i(px,"bb"); hbp=_i(px,"hbp")
@@ -212,9 +216,10 @@ def show_batting_form(pid):
                 H=_i(px,"h"), doubles=_i(px,"2b"), triples=_i(px,"3b"),
                 HR=_i(px,"hr"), BB=bb, HBP=hbp, AB=ab,
                 PA=_i(px,"pa") or ab+bb+hbp,
+                R=_i(px,"r"), RBI=_i(px,"rbi"),
             )
             st.session_state["active_form"] = None
-            for k2 in ["opp","ab","pa","h","bb","2b","3b","hr","hbp"]:
+            for k2 in ["opp","ab","pa","h","bb","2b","3b","hr","hbp","r","rbi"]:
                 st.session_state.pop(f"{px}_{k2}", None)
             st.rerun()
 
@@ -255,7 +260,7 @@ def show_delete_section(player):
             for g in player['batting']:
                 ck = f"conf_del_b_{g['id']}"
                 c1, c2 = st.columns([5, 1])
-                c1.write(f"{g['game_date']}  vs {g['opponent']}  —  {g['AB']} AB, {g['H']} H")
+                c1.write(f"{g['game_date']}  vs {g['opponent']}  —  {g['AB']} AB, {g['H']} H, {g.get('R',0)} R, {g.get('RBI',0)} RBI")
                 if c2.button("Delete", key=f"del_b_{g['id']}"):
                     st.session_state[ck] = True
                 if st.session_state.get(ck):
@@ -294,7 +299,7 @@ def show_pitching(player):
 
 def show_batting(player):
     bt = player.get('batting_totals', {})
-    m = st.columns(9)
+    m = st.columns(11)
     m[0].metric("G",   bt.get('G', 0))
     m[1].metric("AVG", f"{bt.get('AVG', 0.0):.3f}")
     m[2].metric("OBP", f"{bt.get('OBP', 0.0):.3f}")
@@ -304,6 +309,8 @@ def show_batting(player):
     m[6].metric("H",   bt.get('H', 0))
     m[7].metric("HR",  bt.get('HR', 0))
     m[8].metric("BB",  bt.get('BB', 0))
+    m[9].metric("R",   bt.get('R', 0))
+    m[10].metric("RBI", bt.get('RBI', 0))
     if player['batting']:
         df = pd.DataFrame(player['batting'])
         cols = [c for c in BAT_COLS if c in df.columns]

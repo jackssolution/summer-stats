@@ -64,7 +64,8 @@ def _fetch(conn, sql, params=()):
 
 # PostgreSQL lowercases unquoted column names; remap to the uppercase keys
 # the rest of the code expects.
-_BAT_NORM = {'h': 'H', 'hr': 'HR', 'bb': 'BB', 'hbp': 'HBP', 'ab': 'AB', 'pa': 'PA'}
+_BAT_NORM = {'h': 'H', 'hr': 'HR', 'bb': 'BB', 'hbp': 'HBP', 'ab': 'AB', 'pa': 'PA',
+             'r': 'R', 'rbi': 'RBI'}
 _PIT_NORM = {
     'bf': 'BF', 'k': 'K', 'bb': 'BB', 'hbp': 'HBP',
     'h_allowed': 'H_allowed', 'hr_allowed': 'HR_allowed',
@@ -105,6 +106,8 @@ CREATE TABLE IF NOT EXISTS batting_lines (
     HBP INTEGER DEFAULT 0,
     AB INTEGER DEFAULT 0,
     PA INTEGER DEFAULT 0,
+    R INTEGER DEFAULT 0,
+    RBI INTEGER DEFAULT 0,
     UNIQUE(player_id, game_date, opponent)
 );
 CREATE TABLE IF NOT EXISTS pitching_lines (
@@ -156,6 +159,8 @@ _PG_SCHEMA = [
         HBP INTEGER DEFAULT 0,
         AB INTEGER DEFAULT 0,
         PA INTEGER DEFAULT 0,
+        R INTEGER DEFAULT 0,
+        RBI INTEGER DEFAULT 0,
         UNIQUE(player_id, game_date, opponent)
     )""",
     """CREATE TABLE IF NOT EXISTS pitching_lines (
@@ -183,6 +188,23 @@ _PG_SCHEMA = [
 ]
 
 
+def _migrate():
+    """Safely add new columns to existing tables."""
+    cols = [
+        ("batting_lines", "R",   "INTEGER DEFAULT 0"),
+        ("batting_lines", "RBI", "INTEGER DEFAULT 0"),
+    ]
+    with get_db() as db:
+        for table, col, typedef in cols:
+            try:
+                if _PG:
+                    _ex(db, f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {typedef}")
+                else:
+                    _ex(db, f"ALTER TABLE {table} ADD COLUMN {col} {typedef}")
+            except Exception:
+                pass  # column already exists
+
+
 def init_db():
     with get_db() as db:
         if _PG:
@@ -190,6 +212,7 @@ def init_db():
                 _ex(db, stmt)
         else:
             db.executescript(_SQLITE_SCHEMA)
+    _migrate()
     seed_players()
 
 
@@ -238,11 +261,11 @@ def outs_to_ip(outs: int) -> float:
 
 
 def batting_totals(rows):
-    t = dict(H=0, doubles=0, triples=0, HR=0, BB=0, HBP=0, AB=0, PA=0, G=0)
+    t = dict(H=0, doubles=0, triples=0, HR=0, BB=0, HBP=0, AB=0, PA=0, R=0, RBI=0, G=0)
     for r in rows:
         t['G'] += 1
-        for k in ('H', 'doubles', 'triples', 'HR', 'BB', 'HBP', 'AB', 'PA'):
-            t[k] += r[k]
+        for k in ('H', 'doubles', 'triples', 'HR', 'BB', 'HBP', 'AB', 'PA', 'R', 'RBI'):
+            t[k] += r.get(k, 0)
     ab, pa = t['AB'], t['PA']
     h, bb, hbp = t['H'], t['BB'], t['HBP']
     singles = h - t['doubles'] - t['triples'] - t['HR']
@@ -306,27 +329,27 @@ def get_pitching_lines(player_id):
 
 
 def add_batting_line(player_id, game_date, opponent, home_away,
-                     H, doubles, triples, HR, BB, HBP, AB, PA):
+                     H, doubles, triples, HR, BB, HBP, AB, PA, R=0, RBI=0):
     params = (player_id, game_date, opponent, home_away,
-              H, doubles, triples, HR, BB, HBP, AB, PA)
+              H, doubles, triples, HR, BB, HBP, AB, PA, R, RBI)
     if _PG:
         sql = """
             INSERT INTO batting_lines
                 (player_id, game_date, opponent, home_away,
-                 H, doubles, triples, HR, BB, HBP, AB, PA)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                 H, doubles, triples, HR, BB, HBP, AB, PA, R, RBI)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT (player_id, game_date, opponent) DO UPDATE SET
                 home_away=EXCLUDED.home_away, H=EXCLUDED.H,
                 doubles=EXCLUDED.doubles, triples=EXCLUDED.triples,
                 HR=EXCLUDED.HR, BB=EXCLUDED.BB, HBP=EXCLUDED.HBP,
-                AB=EXCLUDED.AB, PA=EXCLUDED.PA
+                AB=EXCLUDED.AB, PA=EXCLUDED.PA, R=EXCLUDED.R, RBI=EXCLUDED.RBI
         """
     else:
         sql = """
             INSERT OR REPLACE INTO batting_lines
                 (player_id, game_date, opponent, home_away,
-                 H, doubles, triples, HR, BB, HBP, AB, PA)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                 H, doubles, triples, HR, BB, HBP, AB, PA, R, RBI)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """
     with get_db() as db:
         _ex(db, sql, params)
