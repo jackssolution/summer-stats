@@ -39,6 +39,8 @@ st.markdown("""
 [data-testid="stDataFrame"] { border: none; }
 /* radio horizontal */
 div[role="radiogroup"] { gap: 0.4rem; }
+div[role="radiogroup"] label { color: #e6edf3 !important; }
+div[role="radiogroup"] label p { color: #e6edf3 !important; }
 /* buttons */
 [data-testid="stButton"] > button {
     background: #21262d;
