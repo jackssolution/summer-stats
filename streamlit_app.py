@@ -33,7 +33,7 @@ hr { border-color: #131C2E !important; margin: 0.6rem 0 !important; }
 [data-testid="stVerticalBlockBorderWrapper"] {
     background-color: #0D1422 !important;
     border: 1px solid #17243A !important;
-    border-left: 3px solid #F59E0B !important;
+    border-left: 3px solid #7A0019 !important;
     border-radius: 10px !important;
 }
 
@@ -50,16 +50,16 @@ hr { border-color: #131C2E !important; margin: 0.6rem 0 !important; }
 }
 [data-testid="stButton"] > button:hover {
     background: #1A2640;
-    border-color: #F59E0B;
-    color: #F59E0B;
+    border-color: #FFD700;
+    color: #FFD700;
 }
 [data-testid="stButton"] > button[kind="primary"] {
-    background: rgba(245,158,11,0.1);
-    border: 1px solid rgba(245,158,11,0.45);
-    color: #F59E0B;
+    background: rgba(255,215,0,0.08);
+    border: 1px solid rgba(255,215,0,0.4);
+    color: #FFD700;
 }
 [data-testid="stButton"] > button[kind="primary"]:hover {
-    background: rgba(245,158,11,0.2);
+    background: rgba(255,215,0,0.18);
 }
 
 /* ── Filters — radio → pill tabs ──────────────────────────────── */
@@ -85,10 +85,10 @@ div[role="radiogroup"] > label p {
     line-height: 1.5 !important;
 }
 div[role="radiogroup"] > label:has(input:checked) {
-    background: rgba(245,158,11,0.08);
-    border-color: rgba(245,158,11,0.5);
+    background: rgba(255,215,0,0.07);
+    border-color: rgba(255,215,0,0.45);
 }
-div[role="radiogroup"] > label:has(input:checked) p { color: #F59E0B !important; }
+div[role="radiogroup"] > label:has(input:checked) p { color: #FFD700 !important; }
 
 /* ── Widget labels ────────────────────────────────────────────── */
 [data-testid="stWidgetLabel"] p,
@@ -143,8 +143,8 @@ label { color: #4B607A !important; }
     letter-spacing: 0.1em;
     margin-top: 4px;
 }
-.hi  .stat-val { color: #F59E0B; }
-.hi  .stat-lbl { color: #5C3A06; }
+.hi  .stat-val { color: #FFD700; }
+.hi  .stat-lbl { color: #4A3800; }
 .grn .stat-val { color: #34D399; }
 .grn .stat-lbl { color: #064E3B; }
 
@@ -169,7 +169,7 @@ label { color: #4B607A !important; }
     line-height: 1.7;
 }
 .pill-team { background: #111827; color: #4B607A; border: 1px solid #1E2D47; }
-.pill-pos  { background: rgba(245,158,11,0.07); color: #F59E0B; border: 1px solid rgba(245,158,11,0.25); }
+.pill-pos  { background: rgba(255,215,0,0.07); color: #FFD700; border: 1px solid rgba(255,215,0,0.25); }
 .pill-hand { background: #0D1422; color: #334155; border: 1px solid #1A2438; }
 
 /* ── Section & sub-section headers ───────────────────────────── */
@@ -177,7 +177,7 @@ label { color: #4B607A !important; }
     font-size: 0.6rem;
     font-weight: 800;
     letter-spacing: 0.2em;
-    color: #F59E0B;
+    color: #FFD700;
     text-transform: uppercase;
     padding-bottom: 8px;
     border-bottom: 1px solid #131C2E;
@@ -200,7 +200,7 @@ label { color: #4B607A !important; }
     letter-spacing: -0.03em;
     line-height: 1;
 }
-.app-title .yr { color: #F59E0B; }
+.app-title .yr { color: #FFD700; }
 .app-sub {
     font-size: 0.6rem;
     color: #2D4060;
@@ -250,9 +250,12 @@ with fc2:
 
 st.divider()
 
-# ── Data ───────────────────────────────────────────────────────────────────────
+# ── Data — cached in session state so filter/log toggles don't re-query DB ─────
 
-data = db.get_full_dashboard_data()
+if st.session_state.get("_data_stale", True):
+    st.session_state["_data"] = db.get_full_dashboard_data()
+    st.session_state["_data_stale"] = False
+data = st.session_state["_data"]
 
 # ── Column definitions ─────────────────────────────────────────────────────────
 
@@ -342,6 +345,7 @@ def show_pitching_form(pid, edit_id=None):
             else:
                 db.add_pitching_line(player_id=pid, **kwargs)
             st.session_state["active_form"] = None
+            st.session_state["_data_stale"] = True
             for k2 in ["ip","opp","bf","k","bb","hbp","r","er","hall","hr","2b","3b","str","balls","pit"]:
                 st.session_state.pop(f"{px}_{k2}", None)
             st.rerun()
@@ -398,6 +402,7 @@ def show_batting_form(pid, edit_id=None):
             else:
                 db.add_batting_line(player_id=pid, **kwargs)
             st.session_state["active_form"] = None
+            st.session_state["_data_stale"] = True
             for k2 in ["opp","ab","pa","h","bb","2b","3b","hr","hbp","r","rbi","sb"]:
                 st.session_state.pop(f"{px}_{k2}", None)
             st.rerun()
@@ -480,6 +485,7 @@ def show_delete_section(player):
                     if y.button("Yes, delete", key=f"yes_{ck}", type="primary"):
                         db.delete_pitching_line(g['id'])
                         st.session_state.pop(ck, None)
+                        st.session_state["_data_stale"] = True
                         st.rerun()
                     if n.button("Cancel", key=f"no_{ck}"):
                         st.session_state.pop(ck, None)
@@ -504,6 +510,7 @@ def show_delete_section(player):
                     if y.button("Yes, delete", key=f"yes_{ck}", type="primary"):
                         db.delete_batting_line(g['id'])
                         st.session_state.pop(ck, None)
+                        st.session_state["_data_stale"] = True
                         st.rerun()
                     if n.button("Cancel", key=f"no_{ck}"):
                         st.session_state.pop(ck, None)
