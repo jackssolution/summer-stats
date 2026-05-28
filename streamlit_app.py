@@ -620,12 +620,13 @@ def render_player_card(pid):
                 st.markdown('<div class="sub-hdr">Batting</div>', unsafe_allow_html=True)
             show_batting(player, show_log)
 
-        # Game log toggle — NO st.rerun(); fragment reruns itself on button click
+        # Game log toggle — fragment-scoped rerun so single click reflects immediately
         has_games = bool(player['pitching'] or player['batting'])
         if has_games:
             log_label = "Hide Game Log" if show_log else "Show Game Log"
             if st.button(log_label, key=f"log_toggle_{pid}", use_container_width=True):
                 st.session_state[log_key] = not show_log
+                st.rerun(scope="fragment")
 
         # Inline form — stays open when switching filters
         if active and active.get("pid") == pid:
