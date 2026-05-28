@@ -343,18 +343,19 @@ def show_delete_section(player):
 
 def show_pitching(player):
     pt = player.get('pitching_totals', {})
-    m = st.columns(11)
+    m = st.columns(12)
     m[0].metric("G",        pt.get('G', 0))
     m[1].metric("IP",       pt.get('IP', 0.0))
     m[2].metric("ERA",      f"{pt.get('ERA', 0.0):.2f}")
-    m[3].metric("K",        pt.get('K', 0))
-    m[4].metric("BB",       pt.get('BB', 0))
-    m[5].metric("R",        pt.get('R', 0))
-    m[6].metric("ER",       pt.get('ER', 0))
-    m[7].metric("K%",       f"{pt.get('K_pct', 0.0):.1f}%")
-    m[8].metric("BB%",      f"{pt.get('BB_pct', 0.0):.1f}%")
-    m[9].metric("STR%",     f"{pt.get('strike_pct', 0.0):.1f}%")
-    m[10].metric("PITCHES", pt.get('total_pitches', 0))
+    m[3].metric("WHIP",     f"{pt.get('WHIP', 0.0):.2f}")
+    m[4].metric("K",        pt.get('K', 0))
+    m[5].metric("BB",       pt.get('BB', 0))
+    m[6].metric("R",        pt.get('R', 0))
+    m[7].metric("ER",       pt.get('ER', 0))
+    m[8].metric("K%",       f"{pt.get('K_pct', 0.0):.1f}%")
+    m[9].metric("BB%",      f"{pt.get('BB_pct', 0.0):.1f}%")
+    m[10].metric("STR%",    f"{pt.get('strike_pct', 0.0):.1f}%")
+    m[11].metric("PITCHES", pt.get('total_pitches', 0))
     if player['pitching']:
         df = pd.DataFrame(player['pitching'])
         cols = [c for c in PITCH_COLS if c in df.columns]

@@ -298,7 +298,8 @@ def pitching_totals(rows):
     t['H_per9'] = round(t['H_allowed'] / ip * 9, 2) if ip else 0.0
     tp = t['total_pitches']
     t['strike_pct'] = round(t['strikes'] / tp * 100, 1) if tp else 0.0
-    t['ERA'] = round(t['ER'] / ip * 9, 2) if ip else 0.0
+    t['ERA']  = round(t['ER'] / ip * 9, 2) if ip else 0.0
+    t['WHIP'] = round((t['BB'] + t['H_allowed']) / ip, 2) if ip else 0.0
     return t
 
 
