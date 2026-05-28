@@ -172,7 +172,8 @@ fc1, fc2 = st.columns([3, 2])
 with fc1:
     team_filter = st.radio(
         "Team",
-        ["All Players", "Kenosha Kingfish", "St. Cloud Rox", "Willmar Stingers"],
+        ["All Players", "Kenosha Kingfish", "St. Cloud Rox", "Willmar Stingers",
+         "Falmouth Commodores", "Bourne Braves", "Upper Valley Nighthawks"],
         horizontal=True,
         label_visibility="collapsed",
     )

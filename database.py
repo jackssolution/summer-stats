@@ -197,6 +197,7 @@ def init_db():
 
 def seed_players():
     players = [
+        # Northwoods League
         ("Nathan O'Donnell", "Kenosha Kingfish", "kenosha-kingfish",
          "Northwoods League", "two-way", "R", "R"),
         ("Ethan Felling", "St. Cloud Rox", "st-cloud-rox",
@@ -207,6 +208,16 @@ def seed_players():
          "Northwoods League", "pitcher", "R", "R"),
         ("Eli Kokenge", "Willmar Stingers", "willmar-stingers",
          "Northwoods League", "pitcher", "R", "R"),
+        # Cape Cod Baseball League
+        ("Adam Urban", "Falmouth Commodores", "falmouth-commodores",
+         "Cape Cod Baseball League", "pitcher", "R", "R"),
+        ("Will Whelan", "Bourne Braves", "bourne-braves",
+         "Cape Cod Baseball League", "pitcher", "L", "L"),
+        # NECBL
+        ("Tyler Hemmesch", "Upper Valley Nighthawks", "upper-valley-nighthawks",
+         "NECBL", "pitcher", "R", "R"),
+        ("Jack Spanier", "Upper Valley Nighthawks", "upper-valley-nighthawks",
+         "NECBL", "hitter", "R", "R"),
     ]
     upsert = (
         "INSERT INTO players (name, team, team_slug, league, position, throws, bats) "
