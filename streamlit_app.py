@@ -512,7 +512,7 @@ def show_delete_section(player):
 
 # ── Stat displays ──────────────────────────────────────────────────────────────
 
-def show_pitching(player):
+def show_pitching(player, show_log=False):
     pt = player.get('pitching_totals', {})
     html = (
         _stat("G",       pt.get('G', 0))                          +
@@ -529,13 +529,13 @@ def show_pitching(player):
         _stat("PITCHES", pt.get('total_pitches', 0))
     )
     st.markdown(f'<div class="stat-row">{html}</div>', unsafe_allow_html=True)
-    if player['pitching']:
+    if show_log and player['pitching']:
         df = pd.DataFrame(player['pitching'])
         cols = [c for c in PITCH_COLS if c in df.columns]
         st.dataframe(df[cols].rename(columns=PITCH_RENAME), hide_index=True, use_container_width=True)
 
 
-def show_batting(player):
+def show_batting(player, show_log=False):
     bt = player.get('batting_totals', {})
     html = (
         _stat("G",   bt.get('G', 0))                           +
@@ -552,7 +552,7 @@ def show_batting(player):
         _stat("SB",  bt.get('SB', 0))
     )
     st.markdown(f'<div class="stat-row">{html}</div>', unsafe_allow_html=True)
-    if player['batting']:
+    if show_log and player['batting']:
         df = pd.DataFrame(player['batting'])
         cols = [c for c in BAT_COLS if c in df.columns]
         st.dataframe(df[cols].rename(columns=BAT_RENAME), hide_index=True, use_container_width=True)
@@ -588,6 +588,11 @@ for section_label, section_players in [("PITCHERS", pitchers), ("HITTERS", hitte
         arm = f"{player['throws']}HP" if pos != 'hitter' else f"Bats {player['bats']}"
         pos_label = "Two-Way" if pos == 'two-way' else pos.capitalize()
 
+        # Per-player game-log visibility (default: hidden)
+        log_key = f"show_log_{pid}"
+        st.session_state.setdefault(log_key, False)
+        show_log = st.session_state[log_key]
+
         with st.container(border=True):
             # Header row
             nc1, nc2, nc3 = st.columns([6, 1, 1])
@@ -615,7 +620,7 @@ for section_label, section_players in [("PITCHERS", pitchers), ("HITTERS", hitte
             if pos in ('pitcher', 'two-way'):
                 if pos == 'two-way':
                     st.markdown('<div class="sub-hdr">Pitching</div>', unsafe_allow_html=True)
-                show_pitching(player)
+                show_pitching(player, show_log)
 
             if pos == 'two-way':
                 st.divider()
@@ -624,7 +629,15 @@ for section_label, section_players in [("PITCHERS", pitchers), ("HITTERS", hitte
             if pos in ('hitter', 'two-way'):
                 if pos == 'two-way':
                     st.markdown('<div class="sub-hdr">Batting</div>', unsafe_allow_html=True)
-                show_batting(player)
+                show_batting(player, show_log)
+
+            # Game log toggle
+            has_games = bool(player['pitching'] or player['batting'])
+            if has_games:
+                log_label = "Hide Game Log" if show_log else "Show Game Log"
+                if st.button(log_label, key=f"log_toggle_{pid}", use_container_width=True):
+                    st.session_state[log_key] = not show_log
+                    st.rerun()
 
             # Inline form — stays open when switching filters
             if active and active.get("pid") == pid:
