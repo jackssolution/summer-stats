@@ -208,6 +208,19 @@ def _migrate():
                 pass  # column already exists
 
 
+def _purge_players():
+    """Delete players who should no longer appear (runs once; harmless if already gone)."""
+    to_remove = ["Nathan O'Donnell"]
+    with get_db() as db:
+        for name in to_remove:
+            rows = _fetch(db, "SELECT id FROM players WHERE name=?", (name,))
+            if rows:
+                pid = rows[0]['id']
+                _ex(db, "DELETE FROM batting_lines  WHERE player_id=?", (pid,))
+                _ex(db, "DELETE FROM pitching_lines WHERE player_id=?", (pid,))
+                _ex(db, "DELETE FROM players        WHERE id=?",        (pid,))
+
+
 def init_db():
     with get_db() as db:
         if _PG:
@@ -216,6 +229,7 @@ def init_db():
         else:
             db.executescript(_SQLITE_SCHEMA)
     _migrate()
+    _purge_players()
     seed_players()
 
 
@@ -224,8 +238,6 @@ def init_db():
 def seed_players():
     players = [
         # Northwoods League
-        ("Nathan O'Donnell", "Kenosha Kingfish", "kenosha-kingfish",
-         "Northwoods League", "two-way", "R", "R"),
         ("Ethan Felling", "St. Cloud Rox", "st-cloud-rox",
          "Northwoods League", "pitcher", "L", "L"),
         ("Jackson Akin", "St. Cloud Rox", "st-cloud-rox",
