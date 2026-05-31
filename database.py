@@ -210,7 +210,7 @@ def _migrate():
 
 def _purge_players():
     """Delete players who should no longer appear (runs once; harmless if already gone)."""
-    to_remove = ["Nathan O'Donnell"]
+    to_remove = ["Nathan O'Donnell", "Jack Spanier"]
     with get_db() as db:
         for name in to_remove:
             rows = _fetch(db, "SELECT id FROM players WHERE name=?", (name,))
@@ -254,8 +254,6 @@ def seed_players():
         # NECBL
         ("Tyler Hemmesch", "Upper Valley Nighthawks", "upper-valley-nighthawks",
          "NECBL", "pitcher", "R", "R"),
-        ("Jack Spanier", "Upper Valley Nighthawks", "upper-valley-nighthawks",
-         "NECBL", "hitter", "R", "R"),
     ]
     upsert = (
         "INSERT INTO players (name, team, team_slug, league, position, throws, bats) "
